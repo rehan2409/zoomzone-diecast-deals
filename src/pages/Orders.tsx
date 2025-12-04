@@ -6,6 +6,7 @@ import { CartDrawer } from '@/components/CartDrawer';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Order } from '@/types';
+import { generateInvoice } from '@/lib/invoiceGenerator';
 import { 
   Loader2, 
   Package, 
@@ -13,7 +14,8 @@ import {
   CheckCircle, 
   XCircle,
   AlertCircle,
-  ImageOff
+  ImageOff,
+  FileText
 } from 'lucide-react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
@@ -204,11 +206,34 @@ const Orders = () => {
                       Subtotal: ₹{order.subtotal.toLocaleString('en-IN')}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-muted-foreground text-sm">Total</p>
-                    <p className="font-display text-2xl text-primary">
-                      ₹{order.total.toLocaleString('en-IN')}
-                    </p>
+                  <div className="flex items-center gap-4">
+                    {order.status === 'accepted' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => generateInvoice({
+                          id: order.id,
+                          customer_name: order.customer_name,
+                          customer_email: order.customer_email,
+                          customer_phone: order.customer_phone,
+                          customer_address: order.customer_address,
+                          items: order.items,
+                          subtotal: order.subtotal,
+                          discount: order.discount,
+                          total: order.total,
+                          created_at: order.created_at,
+                        })}
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Invoice
+                      </Button>
+                    )}
+                    <div className="text-right">
+                      <p className="text-muted-foreground text-sm">Total</p>
+                      <p className="font-display text-2xl text-primary">
+                        ₹{order.total.toLocaleString('en-IN')}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
