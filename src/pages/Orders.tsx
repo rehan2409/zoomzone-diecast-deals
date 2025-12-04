@@ -54,7 +54,7 @@ const Orders = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data as Order[]);
+      setOrders(data as unknown as Order[]);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {

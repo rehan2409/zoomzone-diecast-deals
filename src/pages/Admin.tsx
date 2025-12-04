@@ -143,7 +143,7 @@ const Admin = () => {
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
-    if (!error) setOrders(data as Order[]);
+    if (!error) setOrders(data as unknown as Order[]);
   };
 
   const fetchPaymentQR = async () => {

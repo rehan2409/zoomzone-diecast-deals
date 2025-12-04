@@ -316,7 +316,7 @@ const Checkout = () => {
         customer_phone: phone,
         customer_address: address,
         customer_notes: notes || null,
-        items: items,
+        items: JSON.parse(JSON.stringify(items)),
         subtotal: subtotal,
         discount: discount,
         total: total,
@@ -327,7 +327,7 @@ const Checkout = () => {
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
-        .insert(orderData)
+        .insert([orderData])
         .select()
         .single();
 
