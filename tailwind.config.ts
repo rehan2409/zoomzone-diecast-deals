@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['"Racing Sans One"', 'cursive'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +61,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        chrome: "hsl(var(--chrome))",
+        "chrome-shine": "hsl(var(--chrome-shine))",
+        "racing-red": "hsl(var(--racing-red))",
+        "racing-orange": "hsl(var(--racing-orange))",
+        "racing-black": "hsl(var(--racing-black))",
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,25 +76,54 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px) rotate(0deg)" },
+          "50%": { transform: "translateY(-20px) rotate(5deg)" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 20px rgba(228, 27, 23, 0.3)" },
+          "50%": { boxShadow: "0 0 40px rgba(228, 27, 23, 0.6)" },
+        },
+        "slide-in-right": {
+          from: { transform: "translateX(100%)", opacity: "0" },
+          to: { transform: "translateX(0)", opacity: "1" },
+        },
+        "fade-in-up": {
+          from: { transform: "translateY(20px)", opacity: "0" },
+          to: { transform: "translateY(0)", opacity: "1" },
+        },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        float: "float 6s ease-in-out infinite",
+        "float-delayed": "float 6s ease-in-out 2s infinite",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "slide-in-right": "slide-in-right 0.3s ease-out",
+        "fade-in-up": "fade-in-up 0.5s ease-out",
+        "spin-slow": "spin-slow 20s linear infinite",
+      },
+      backgroundImage: {
+        "hero-gradient": "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%)",
+        "accent-gradient": "linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--primary)) 100%)",
+        "chrome-gradient": "linear-gradient(180deg, hsl(var(--chrome-shine)) 0%, hsl(var(--chrome)) 100%)",
+        "card-gradient": "linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--muted) / 0.3) 100%)",
+      },
+      boxShadow: {
+        card: "0 4px 24px -4px rgba(0, 0, 0, 0.1)",
+        "card-hover": "0 12px 32px -8px rgba(228, 27, 23, 0.25)",
+        glow: "0 0 40px rgba(228, 27, 23, 0.3)",
       },
     },
   },
