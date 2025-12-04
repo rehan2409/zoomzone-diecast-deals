@@ -6,6 +6,7 @@ export interface Product {
   category: 'mainline' | 'premium' | 'treasure-hunts' | 'vintage';
   images: string[];
   available: boolean;
+  stock: number;
   created_at: string;
   updated_at: string;
 }

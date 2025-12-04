@@ -341,6 +341,23 @@ const Checkout = () => {
           .eq('id', appliedCoupon.id);
       }
 
+      // Deduct stock for each product
+      for (const item of items) {
+        const { data: product } = await supabase
+          .from('products')
+          .select('stock')
+          .eq('id', item.product.id)
+          .single();
+        
+        if (product) {
+          const newStock = Math.max(0, (product.stock || 0) - item.quantity);
+          await supabase
+            .from('products')
+            .update({ stock: newStock })
+            .eq('id', item.product.id);
+        }
+      }
+
       setOrderId(order.id);
       setOrderComplete(true);
       clearCart();

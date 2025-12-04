@@ -75,6 +75,7 @@ const Admin = () => {
     price: '',
     category: 'mainline' as Product['category'],
     available: true,
+    stock: '1',
     images: [] as string[],
   });
   const [couponForm, setCouponForm] = useState({
@@ -197,6 +198,7 @@ const Admin = () => {
       price: parseFloat(productForm.price),
       category: productForm.category,
       available: productForm.available,
+      stock: parseInt(productForm.stock) || 1,
       images: productForm.images,
     };
 
@@ -246,6 +248,7 @@ const Admin = () => {
       price: '',
       category: 'mainline',
       available: true,
+      stock: '1',
       images: [],
     });
   };
@@ -342,12 +345,32 @@ const Admin = () => {
 
   // Order functions
   const handleUpdateOrderStatus = async (orderId: string, status: 'accepted' | 'rejected') => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
     const { error } = await supabase
       .from('orders')
       .update({ status })
       .eq('id', orderId);
 
     if (!error) {
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-order-notification', {
+          body: {
+            orderId: order.id,
+            customerEmail: order.customer_email,
+            customerName: order.customer_name,
+            status,
+            items: order.items,
+            total: order.total,
+          },
+        });
+        console.log('Email notification sent');
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+      }
+
       toast.success(`Order ${status}`);
       fetchOrders();
       setSelectedOrder(null);
@@ -372,6 +395,28 @@ const Admin = () => {
     { name: 'Treasure Hunts', value: products.filter(p => p.category === 'treasure-hunts').length },
     { name: 'Vintage', value: products.filter(p => p.category === 'vintage').length },
   ];
+
+  // Revenue trend data (last 7 days)
+  const getRevenueTrend = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayOrders = orders.filter(o => 
+        o.status === 'accepted' && 
+        o.created_at.split('T')[0] === dateStr
+      );
+      days.push({
+        date: date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }),
+        revenue: dayOrders.reduce((sum, o) => sum + o.total, 0),
+        orders: dayOrders.length,
+      });
+    }
+    return days;
+  };
+
+  const revenueTrend = getRevenueTrend();
 
   const COLORS = ['#E41B17', '#FF6B00', '#22c55e', '#C0C0C0'];
 
@@ -535,6 +580,42 @@ const Admin = () => {
                   </ResponsiveContainer>
                 </div>
               </div>
+
+              {/* Revenue Trend Chart */}
+              <div className="bg-card rounded-xl border border-border p-6">
+                <h3 className="font-display text-lg mb-4">Revenue Trend (Last 7 Days)</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={revenueTrend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis dataKey="date" stroke="#888" />
+                    <YAxis stroke="#888" />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                      formatter={(value: number, name: string) => [
+                        name === 'revenue' ? `₹${value.toLocaleString('en-IN')}` : value,
+                        name === 'revenue' ? 'Revenue' : 'Orders'
+                      ]}
+                    />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="#E41B17" 
+                      strokeWidth={2}
+                      dot={{ fill: '#E41B17' }}
+                      name="Revenue"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="orders" 
+                      stroke="#22c55e" 
+                      strokeWidth={2}
+                      dot={{ fill: '#22c55e' }}
+                      name="Orders"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </TabsContent>
 
             {/* Products Tab */}
@@ -600,6 +681,16 @@ const Admin = () => {
                             </SelectContent>
                           </Select>
                         </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Stock Quantity *</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={productForm.stock}
+                          onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+                          placeholder="1"
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label>Images</Label>
@@ -671,7 +762,14 @@ const Admin = () => {
                       )}
                     </div>
                     <h3 className="font-semibold line-clamp-1">{product.title}</h3>
-                    <p className="text-primary font-display text-lg">₹{product.price.toLocaleString('en-IN')}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-primary font-display text-lg">₹{product.price.toLocaleString('en-IN')}</p>
+                      <span className={`text-sm px-2 py-0.5 rounded-full ${
+                        (product.stock || 0) > 0 ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'
+                      }`}>
+                        Stock: {product.stock || 0}
+                      </span>
+                    </div>
                     <div className="flex gap-2 mt-3">
                       <Button
                         variant="outline"
@@ -685,6 +783,7 @@ const Admin = () => {
                             price: product.price.toString(),
                             category: product.category,
                             available: product.available,
+                            stock: (product.stock || 1).toString(),
                             images: product.images || [],
                           });
                           setShowProductDialog(true);

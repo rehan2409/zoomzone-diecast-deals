@@ -16,13 +16,15 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!product.available) {
-      toast.error('This product is currently unavailable');
+    if (!product.available || (product.stock !== undefined && product.stock <= 0)) {
+      toast.error('This product is currently out of stock');
       return;
     }
     addItem(product);
     toast.success(`${product.title} added to cart!`);
   };
+
+  const isOutOfStock = !product.available || (product.stock !== undefined && product.stock <= 0);
 
   const categoryLabels = {
     mainline: 'Mainline',
@@ -67,9 +69,9 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Availability Badge */}
-      {!product.available && (
+      {isOutOfStock && (
         <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold bg-destructive/20 text-destructive">
-          Sold Out
+          Out of Stock
         </div>
       )}
 
@@ -100,7 +102,7 @@ export function ProductCard({ product }: ProductCardProps) {
               variant="hero" 
               size="icon"
               onClick={handleAddToCart}
-              disabled={!product.available}
+              disabled={isOutOfStock}
             >
               <ShoppingCart className="w-5 h-5" />
             </Button>
