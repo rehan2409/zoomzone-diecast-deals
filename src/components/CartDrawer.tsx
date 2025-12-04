@@ -97,7 +97,7 @@ export function CartDrawer() {
                           variant="outline" 
                           size="icon" 
                           className="h-7 w-7"
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.product.stock)}
                         >
                           <Minus className="w-3 h-3" />
                         </Button>
@@ -106,7 +106,8 @@ export function CartDrawer() {
                           variant="outline" 
                           size="icon" 
                           className="h-7 w-7"
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.product.stock)}
+                          disabled={item.quantity >= (item.product.stock || 1)}
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
@@ -119,6 +120,9 @@ export function CartDrawer() {
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
+                      {item.quantity >= (item.product.stock || 1) && (
+                        <p className="text-xs text-warning mt-1">Max available: {item.product.stock || 1}</p>
+                      )}
                     </div>
                   </div>
                 ))}

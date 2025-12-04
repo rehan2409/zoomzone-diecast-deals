@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCartStore } from '@/store/cartStore';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { jsPDF } from 'jspdf';
+import { generateInvoice } from '@/lib/invoiceGenerator';
 import {
   User,
   Mail,
@@ -167,112 +167,6 @@ const Checkout = () => {
     setPaymentScreenshotUrl(URL.createObjectURL(file));
   };
 
-  const generateInvoice = (orderData: any) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // Header
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(228, 27, 23);
-    doc.text('ZoomZone.Cars', pageWidth / 2, 25, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    doc.text('Your Destination for Die-Cast Treasures', pageWidth / 2, 32, { align: 'center' });
-
-    // Invoice title
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
-
-    // Invoice details
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Invoice No: ${orderData.id.slice(0, 8).toUpperCase()}`, 20, 65);
-    doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 20, 72);
-    doc.text(`Time: ${new Date().toLocaleTimeString('en-IN')}`, 20, 79);
-
-    // Customer details
-    doc.setFont('helvetica', 'bold');
-    doc.text('Bill To:', 20, 95);
-    doc.setFont('helvetica', 'normal');
-    doc.text(orderData.customer_name, 20, 102);
-    doc.text(orderData.customer_phone, 20, 109);
-    doc.text(orderData.customer_email, 20, 116);
-    
-    // Wrap address text
-    const addressLines = doc.splitTextToSize(orderData.customer_address, 80);
-    doc.text(addressLines, 20, 123);
-
-    // Items table header
-    const tableTop = 150;
-    doc.setFillColor(228, 27, 23);
-    doc.rect(20, tableTop - 5, pageWidth - 40, 10, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.text('S.No', 25, tableTop + 2);
-    doc.text('Item Description', 45, tableTop + 2);
-    doc.text('Qty', 120, tableTop + 2);
-    doc.text('Rate (Rs.)', 140, tableTop + 2);
-    doc.text('Amount (Rs.)', 170, tableTop + 2);
-
-    // Items
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'normal');
-    let y = tableTop + 15;
-    orderData.items.forEach((item: any, index: number) => {
-      doc.text(`${index + 1}`, 25, y);
-      const titleLines = doc.splitTextToSize(item.product.title, 70);
-      doc.text(titleLines, 45, y);
-      doc.text(`${item.quantity}`, 120, y);
-      doc.text(`${item.product.price.toFixed(2)}`, 140, y);
-      doc.text(`${(item.product.price * item.quantity).toFixed(2)}`, 170, y);
-      y += titleLines.length * 7 + 5;
-    });
-
-    // Totals
-    y += 10;
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, y, pageWidth - 20, y);
-    y += 10;
-
-    doc.text('Subtotal:', 130, y);
-    doc.text(`Rs. ${orderData.subtotal.toFixed(2)}`, 170, y);
-
-    if (orderData.discount > 0) {
-      y += 8;
-      doc.setTextColor(34, 139, 34);
-      doc.text('Discount:', 130, y);
-      doc.text(`- Rs. ${orderData.discount.toFixed(2)}`, 170, y);
-    }
-
-    y += 10;
-    doc.setFillColor(240, 240, 240);
-    doc.rect(120, y - 5, 70, 12, 'F');
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Grand Total:', 130, y + 3);
-    doc.text(`Rs. ${orderData.total.toFixed(2)}`, 170, y + 3);
-
-    // Payment status
-    y += 25;
-    doc.setFillColor(34, 139, 34);
-    doc.rect(pageWidth / 2 - 30, y - 5, 60, 10, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.text('PAYMENT RECEIVED', pageWidth / 2, y + 2, { align: 'center' });
-
-    // Footer
-    doc.setTextColor(100, 100, 100);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text('Thank you for shopping with ZoomZone.Cars!', pageWidth / 2, 270, { align: 'center' });
-    doc.text('Contact: contact@zoomzone.cars | +91 98765 43210', pageWidth / 2, 277, { align: 'center' });
-
-    doc.save(`ZoomZone_Invoice_${orderData.id.slice(0, 8).toUpperCase()}.pdf`);
-  };
 
   const handleSubmitOrder = async () => {
     if (!user) {

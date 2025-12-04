@@ -7,7 +7,7 @@ interface CartState {
   isOpen: boolean;
   addItem: (product: Product) => void;
   removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  updateQuantity: (productId: string, quantity: number, maxStock?: number) => void;
   clearCart: () => void;
   toggleCart: () => void;
   openCart: () => void;
@@ -25,11 +25,15 @@ export const useCartStore = create<CartState>()(
       addItem: (product: Product) => {
         set((state) => {
           const existingItem = state.items.find(item => item.product.id === product.id);
+          const maxStock = product.stock || 1;
+          
           if (existingItem) {
+            // Don't exceed available stock
+            const newQuantity = Math.min(existingItem.quantity + 1, maxStock);
             return {
               items: state.items.map(item =>
                 item.product.id === product.id
-                  ? { ...item, quantity: item.quantity + 1 }
+                  ? { ...item, quantity: newQuantity, product: { ...item.product, stock: product.stock } }
                   : item
               ),
             };
@@ -44,15 +48,16 @@ export const useCartStore = create<CartState>()(
         }));
       },
 
-      updateQuantity: (productId: string, quantity: number) => {
+      updateQuantity: (productId: string, quantity: number, maxStock?: number) => {
         if (quantity <= 0) {
           get().removeItem(productId);
           return;
         }
+        const finalQuantity = maxStock ? Math.min(quantity, maxStock) : quantity;
         set((state) => ({
           items: state.items.map(item =>
             item.product.id === productId
-              ? { ...item, quantity }
+              ? { ...item, quantity: finalQuantity }
               : item
           ),
         }));
