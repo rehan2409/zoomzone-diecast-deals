@@ -357,32 +357,38 @@ const Admin = () => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', orderId);
+    try {
+      // Use edge function to bypass RLS
+      const { data, error } = await supabase.functions.invoke('update-order-status', {
+        body: { orderId, status },
+      });
 
-    if (!error) {
-      // Send email notification
-      try {
-        await supabase.functions.invoke('send-order-notification', {
-          body: {
-            orderId: order.id,
-            customerEmail: order.customer_email,
-            customerName: order.customer_name,
-            status,
-            items: order.items,
-            total: order.total,
-          },
-        });
-        console.log('Email notification sent');
-      } catch (emailError) {
-        console.error('Failed to send email:', emailError);
+      if (error) {
+        console.error('Error updating order:', error);
+        toast.error('Failed to update order');
+        return;
       }
+
+      // Send email notification (fire and forget)
+      supabase.functions.invoke('send-order-notification', {
+        body: {
+          orderId: order.id,
+          customerEmail: order.customer_email,
+          customerName: order.customer_name,
+          status,
+          items: order.items,
+          total: order.total,
+        },
+      }).catch(emailError => {
+        console.error('Failed to send email:', emailError);
+      });
 
       toast.success(`Order ${status}`);
       fetchOrders();
       setSelectedOrder(null);
+    } catch (err) {
+      console.error('Error updating order:', err);
+      toast.error('Failed to update order');
     }
   };
 

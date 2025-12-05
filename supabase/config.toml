@@ -2,3 +2,9 @@ project_id = "chpdderdvigcdhdhgdti"
 
 [functions.send-order-notification]
 verify_jwt = false
+
+[functions.get-all-orders]
+verify_jwt = false
+
+[functions.update-order-status]
+verify_jwt = false
