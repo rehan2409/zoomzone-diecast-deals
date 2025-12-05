@@ -140,11 +140,20 @@ const Admin = () => {
   };
 
   const fetchOrders = async () => {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error) setOrders(data as unknown as Order[]);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-all-orders');
+      if (error) {
+        console.error('Error fetching orders:', error);
+        toast.error('Failed to fetch orders');
+        return;
+      }
+      if (data?.orders) {
+        setOrders(data.orders as Order[]);
+      }
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      toast.error('Failed to fetch orders');
+    }
   };
 
   const fetchPaymentQR = async () => {
