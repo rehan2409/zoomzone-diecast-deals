@@ -123,19 +123,28 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Resend API response:", data);
 
     if (!res.ok) {
-      throw new Error(data.message || "Failed to send email");
+      // Log error but don't throw - return success so order acceptance works
+      console.error("Resend API error:", data.message);
+      return new Response(
+        JSON.stringify({ success: true, emailSent: false, error: data.message }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
-    return new Response(JSON.stringify({ success: true, data }), {
+    return new Response(JSON.stringify({ success: true, emailSent: true, data }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
     console.error("Error in send-order-notification function:", error);
+    // Return 200 with error info so order acceptance still works
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: true, emailSent: false, error: error.message }),
       {
-        status: 500,
+        status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
