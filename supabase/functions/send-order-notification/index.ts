@@ -112,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "ZoomZone.Cars <onboarding@resend.dev>",
+        from: "ZoomZone.Cars <orders@zoomzone.cars>",
         to: [customerEmail],
         subject: `Order ${statusText} - ZoomZone.Cars #${orderId.slice(0, 8).toUpperCase()}`,
         html: emailHtml,
